@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pour Toi</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Georgia, serif;
+            background-color: #000;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        /* --- FOND VIDÉO EN CONTINU --- */
+        .video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .bg-video {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            transform: translate(-50%, -50%);
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+
+        .bg-video.active {
+            opacity: 0.55;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.35);
+            z-index: 1;
+        }
+
+        /* --- CONTENEUR PRINCIPAL --- */
+        .main-container {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- SECTION LETTRE --- */
+        .letter-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .envelope-container {
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .envelope {
+            width: 220px;
+            height: 150px;
+            background-color: #d6c5b0;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            border-radius: 4px;
+        }
+
+        .envelope-flap {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 110px solid transparent;
+            border-right: 110px solid transparent;
+            border-top: 85px solid #ccb8a0;
+            transform-origin: top;
+            transition: transform 0.6s ease;
+            z-index: 3;
+        }
+
+        .envelope.open .envelope-flap {
+            transform: rotateX(180deg);
+            z-index: 1;
+        }
+
+        .seal {
+            width: 32px;
+            height: 32px;
+            background-color: #a46d51;
+            border-radius: 50%;
+            position: absolute;
+            top: 65px;
+            left: 94px;
+            z-index: 4;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .touche-txt {
+            margin-top: 25px;
+            font-size: 12px;
+            letter-spacing: 3px;
+            color: #ddd;
+            text-transform: uppercase;
+        }
+
+        .pop-question {
+            position: absolute;
+            top: -30px;
+            right: -20px;
+            background: #fff;
+            color: #000;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .letter-message {
+            display: none;
+            max-width: 340px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            padding: 30px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: left;
+        }
+
+        .letter-message.show {
+            display: block;
+        }
+
+        .letter-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .letter-sub {
+            font-size: 15px;
+            color: #ccc;
+            margin-bottom: 20px;
+        }
+
+        .btn-oui {
+            background: #fff;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        /* --- SECTION ACTIVITÉS --- */
+        .activities-section {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .activities-section.show {
+            display: flex;
+        }
+
+        .activities-title {
+            font-size: 28px;
+            font-weight: 500;
+            margin-bottom: 25px;
+        }
+
+        .cards-container {
+            width: 280px;
+            height: 400px;
+            position: relative;
+        }
+
+        .card {
+            width: 100%;
+            height: 100%;
+            background-color: #1a1a1a;
+            border-radius: 24px;
+            overflow: hidden;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transform: scale(0.95);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+        }
+
+        .card.active {
+            opacity: 1;
+            transform: scale(1);
+            z-index: 2;
+        }
+
+        .card-image {
+            width: 100%;
+            height: 80%;
+            object-fit: cover;
+        }
+
+        .card-footer {
+            height: 20%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #111;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .action-btn {
+            margin-top: 25px;
+            background-color: #fff;
+            color: #000;
+            border: none;
+            padding: 12px 28px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        /* --- SECTION DATE --- */
+        .date-section {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .date-section.show {
+            display: flex;
+        }
+
+        .date-input {
+            margin: 20px 0;
+            padding: 10px 15px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: none;
+            outline: none;
+        }
+
+        /* --- SECTION FINAL (MERCI + GALERIE) --- */
+        .final-section {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .final-section.show {
+            display: flex;
+        }
+
+        .final-title {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .final-recap {
+            font-size: 18px;
+            color: #ddd;
+            margin-bottom: 30px;
+        }
+
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+            width: 100%;
+        }
+
+        .photo-grid img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- FOND VIDÉO CONTINU -->
+    <div class="video-background">
+        <video id="video-player" class="bg-video active" autoplay muted playsinline></video>
+    </div>
+    <div class="overlay"></div>
+
+    <!-- MUSIQUE -->
+    <audio id="bg-music" loop src="best-part.m4a"></audio>
+
+    <div class="main-container">
+
+        <!-- STEP 1: LETTRE -->
+        <div class="letter-section" id="letter-section">
+            <div class="envelope-container" id="env-container">
+                <div class="pop-question">T'es sûre ? 🥹</div>
+                <div class="envelope" id="envelope">
+                    <div class="envelope-flap"></div>
+                    <div class="seal"></div>
+                </div>
+                <div class="touche-txt">Touche la lettre</div>
+            </div>
+
+            <div class="letter-message" id="letter-msg">
+                <div class="letter-title">Alors...</div>
+                <div class="letter-sub">Accepterais-tu de partager un moment avec moi ?</div>
+                <button class="btn-oui" id="btn-oui">Oui ♥</button>
+            </div>
+        </div>
+
+        <!-- STEP 2: CARTES D'ACTIVITÉS -->
+        <div class="activities-section" id="act-section">
+            <div class="activities-title">Où veux-tu qu'on aille ?</div>
+
+            <div class="cards-container">
+                <div class="card active" data-title="Balade en scooter">
+                    <img src="scooter.png" class="card-image">
+                    <div class="card-footer"><div class="card-title">🛵 Balade en scooter</div></div>
+                </div>
+                <div class="card" data-title="Pique-nique">
+                    <img src="picnic.png" class="card-image">
+                    <div class="card-footer"><div class="card-title">🧺 Pique-nique</div></div>
+                </div>
+                <div class="card" data-title="Balade au musée">
+                    <img src="musee.png" class="card-image">
+                    <div class="card-footer"><div class="card-title">🏛️ Balade au musée</div></div>
+                </div>
+                <div class="card" data-title="Cinéma">
+                    <img src="cinema.png" class="card-image">
+                    <div class="card-footer"><div class="card-title">🎬 Cinéma</div></div>
+                </div>
+                <div class="card" data-title="Manger en resto">
+                    <img src="restaurant.png" class="card-image">
+                    <div class="card-footer"><div class="card-title">🍝 Manger</div></div>
+                </div>
+                <div class="card" data-title="Balade">
+                    <img src="balade.png" class="card-image">
+                    <div class="card-footer"><div class="card-title">🌅 Balade</div></div>
+                </div>
+                <div class="card" data-title="Profiter à la maison">
+                    <img src="maison.png" class="card-image">
+                    <div class="card-footer"><div class="card-title">🏠 Profiter à la maison</div></div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button class="action-btn" id="next-btn">Suivant →</button>
+                <button class="action-btn" id="select-btn" style="background: #4CAF50; color: white;">Choisir celle-ci</button>
+            </div>
+        </div>
+
+        <!-- STEP 3: CHOIX DE LA DATE -->
+        <div class="date-section" id="date-section">
+            <h2>Choisis notre date 📅</h2>
+            <input type="date" id="date-picker" class="date-input">
+            <button class="action-btn" id="confirm-date-btn">Valider</button>
+        </div>
+
+        <!-- STEP 4: MERCI + GALERIE PHOTOS -->
+        <div class="final-section" id="final-section">
+            <div class="final-title">Merci d'avoir choisi ! ❤️</div>
+            <div class="final-recap" id="final-recap"></div>
+
+            <div class="photo-grid">
+                <img src="photo1.png" alt="Souvenir">
+                <img src="photo2.png" alt="Souvenir">
+                <img src="photo3.png" alt="Souvenir">
+                <img src="photo4.png" alt="Souvenir">
+                <img src="photo5.png" alt="Souvenir">
+                <img src="photo6.png" alt="Souvenir">
+                <img src="photo7.png" alt="Souvenir">
+                <img src="photo8.png" alt="Souvenir">
+                <img src="photo9.png" alt="Souvenir">
+                <img src="photo10.png" alt="Souvenir">
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- BOUCLE LECTURE 12 VIDÉOS SANS FIN ---
+        const videoList = Array.from({length: 12}, (_, i) => `video${i + 1}.mp4`);
+        let currentVideoIdx = 0;
+        const player = document.getElementById('video-player');
+
+        function playNextVideo() {
+            player.src = videoList[currentVideoIdx];
+            player.play().catch(() => {});
+            currentVideoIdx = (currentVideoIdx + 1) % videoList.length;
+        }
+
+        player.addEventListener('ended', playNextVideo);
+        playNextVideo(); // Lancement initial
+
+        // --- NAVIGATION ET INTERACTIONS ---
+        const envContainer = document.getElementById('env-container');
+        const envelope = document.getElementById('envelope');
+        const letterMsg = document.getElementById('letter-msg');
+        const letterSection = document.getElementById('letter-section');
+        const actSection = document.getElementById('act-section');
+        const dateSection = document.getElementById('date-section');
+        const finalSection = document.getElementById('final-section');
+        const music = document.getElementById('bg-music');
+
+        let selectedActivity = "";
+
+        // Clic sur lettre
+        envContainer.addEventListener('click', () => {
+            envelope.classList.add('open');
+            music.play().catch(() => {});
+            setTimeout(() => {
+                envContainer.style.display = 'none';
+                letterMsg.classList.add('show');
+            }, 600);
+        });
+
+        // Clic sur Oui
+        document.getElementById('btn-oui').addEventListener('click', () => {
+            letterSection.style.display = 'none';
+            actSection.classList.add('show');
+        });
+
+        // Gestion des cartes
+        const cards = document.querySelectorAll('.card');
+        let cIndex = 0;
+
+        document.getElementById('next-btn').addEventListener('click', () => {
+            cards[cIndex].classList.remove('active');
+            cIndex = (cIndex + 1) % cards.length;
+            cards[cIndex].classList.add('active');
+        });
+
+        document.getElementById('select-btn').addEventListener('click', () => {
+            selectedActivity = cards[cIndex].getAttribute('data-title');
+            actSection.classList.remove('show');
+            dateSection.classList.add('show');
+        });
+
+        // Validation date & écran final
+        document.getElementById('confirm-date-btn').addEventListener('click', () => {
+            const chosenDate = document.getElementById('date-picker').value;
+            if(!chosenDate) return alert("Choisis une date !");
+
+            dateSection.classList.remove('show');
+            document.getElementById('final-recap').innerText = `Rendez-vous réservé pour : ${selectedActivity} le ${chosenDate} ! ✨`;
+            finalSection.classList.add('show');
+        });
+    </script>
+</body>
+</html>
